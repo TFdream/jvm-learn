@@ -40,7 +40,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.171-b11, mixed mode)
 ```-XX:+UseParallelGC``` 即 Parallel Scavenge + Parallel Old。
 
 ### JDK 9
-在JDK 9中，G1被提议设置为默认垃圾收集器（JEP 248）。
+从JDK 9开始G1替代并行垃圾回收器成为JVM中默认的垃圾回收器（具体可见JEP提案248，链接：https://openjdk.java.net/jeps/248），并且官方将CMS标记为丢弃（具体可见JEP提案291，链接：https://openjdk.java.net/jeps/291）。G1能够脱颖而出，成为最大的赢家，其最主要的原因就是在过去几年间，众多使用者使用G1之后发现G1的性能表现的非常优秀。
 
 ## JVM常用基础参数
 | 参数 | 说明|
