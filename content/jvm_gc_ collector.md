@@ -1,23 +1,6 @@
-# 7种jvm垃圾回收器，这次全部搞懂
+# 7种jvm垃圾回收器
 
 之前我们讲解了jvm的组成结构与垃圾回收算法等知识点，今天我们来讲讲jvm最重要的堆内存是如何使用垃圾回收器进行垃圾回收，并且如何使用命令去配置使用这些垃圾回收器。
-
-
-## 堆内存垃圾回收过程
-### 第一步
-新生成的对象首先放到Eden区，当Eden区满了会触发Minor GC。
-
-### 第二步
-第一步GC活下来的对象，会被移动到survivor区中的S0区，S0区满了之后会触发Minor GC，S0区存活下来的对象会被移动到S1区，S0区空闲。
-
-S1满了之后在GC，存活下来的再次移动到S0区，S1区空闲，这样反反复复GC，每GC一次，对象的年龄就涨一岁，达到某个值后（15），就会进入老年代。
-
-### 第三步
-在发生一次Minor GC后（前提条件），老年代可能会出现Major GC，这个视垃圾回收器而定。
-* Full GC触发条件
-* 手动调用System.gc，会不断的执行Full GC
-* 老年代空间不足/满了
-* 方法区空间不足/满了
 
 ## 回收哪些区域的对象
 需要注意的是，JVM GC只回收堆内存和方法区内的对象。而栈内存的数据，在超出作用域后会被JVM自动释放掉，所以其不在JVM GC的管理范围内。
@@ -31,104 +14,73 @@ S1满了之后在GC，存活下来的再次移动到S0区，S1区空闲，这样
 
 新生代和老年代区域的回收器之间进行连线，说明他们之间可以搭配使用。
 
-## JDK8默认使用的垃圾收集器
-今天面试问道JDK8默认使用的垃圾收集器是什么，然后回来第一时间CMD命令查看了一下：
-```
-RickydeMacBook-Pro:mall-admin-service apple$ java -XX:+PrintCommandLineFlags -version
--XX:InitialHeapSize=268435456 -XX:MaxHeapSize=4294967296 -XX:+PrintCommandLineFlags -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseParallelGC
-java version "1.8.0_171"
-Java(TM) SE Runtime Environment (build 1.8.0_171-b11)
-Java HotSpot(TM) 64-Bit Server VM (build 25.171-b11, mixed mode)
-
-```
-UseParallelGC 即 Parallel Scavenge + Parallel Old，再查看详细信息：
-```
-> java -XX:+PrintGCDetails -version
-```
-
 ## 如何选择合适的垃圾收集器
 > 衡量垃圾收集器的三项最重要的指标是：内存占用（Footprint）、吞吐量（Throughput）和延迟（Latency），但是我们仅仅知道这些，再去了解一下诸多的垃圾收集器，并不能有效合理的选择一款适合我们的垃圾收集器。在网上看到很多的文章描述，都是请根据每一个垃圾收集器的特性和对应的场景来使用。这一句话其实一点也没错，但是对于一个接触垃圾收集器不多的人来说，可能就会造成一脸懵。本文主要整理选择垃圾收集器的方法
 
 > 从JDK1.8的文档来看，官方显然是很中意G1的，努力的重点也是放在这上面。但是从我个人的使用经验来看，最稳的还是PS+PSOld的组合，ParNew+CMS次之。
 
-### 垃圾收集器选择场景分析
+## 垃圾收集器选择场景分析
 * 应用程序需要尽快计算出结果，目标是能尽快计算出结果，那吞吐量就是最主要的点【吞吐量】。
 * 如果是SLA应用，那停顿时间直接影响服务质量，严重的甚至会导致事务超时，关注点就是延迟【延迟】。
 * 如果是客户端或者嵌入式应用，那垃圾收集器的内存占用则是不可忽视的【内存占用】。
 
-### JDK版本对垃圾收集器的影响
-* 【Serial收集器】JDK1.3.1前是HotSpot新生代收集的唯一选择
-* 【ParNew】【Parallel Scavenge】JDK1.4的垃圾收集器
-* 【CMS（Concurrent Mark Sweep）】【Serial Old】JDK1.5的垃圾收集器版本
-* 【Parallel Old】JDK1.6的垃圾收集器版本
-* 【G1】JDK11的垃圾收集器版本
-* 【ZGC】JDK13的垃圾收集器版本
 
-## 新生代垃圾回收器
-### 1、Serial 垃圾回收器
-Serial收集器是最基本的、发展历史最悠久的收集器。俗称为：串行回收器，采用复制算法进行垃圾回收
+## Serial/Serial Old 收集器
+* Serial 是一个新生代收集器，基于标记-复制算法实现
+* Serial Old 是一个老年代收集器，基于标记-整理算法实现
+* 两者都是单线程收集，需要「Stop The World」
 
-特点
-串行回收器是指使用单线程进行垃圾回收的回收器。每次回收时，串行回收器只有一个工作线程。
+应用场景：
+* 客户端模式下的默认新生代收集器
+* 对于内存资源受限的环境，它是所有收集器里额外内存消耗最小的
+* 对于单核处理器或处理器核心数较少的环境来说，Serial 收集器由于没有线程交互的开销
 
-对于并行能力较弱的单CPU计算机来说，串行回收器的专注性和独占性往往有更好的性能表现。
+## ParNew 收集器
+* ParNew 收集器是是一款新生代收集器。与Serial收集器相比，支持垃圾收集器多线程并行收集，其余参数和Serial一模一样。俗称：并行垃圾回收器，采用复制算法进行垃圾回收。
+* ParNew默认开启的线程数与CPU数量相同，在CPU核数很多的机器上，可以通过参数-XX:ParallelGCThreads来设置线程数。
 
-它存在Stop The World问题，及垃圾回收时，要停止程序的运行。
+## Parallel Scavenge/Parallel Old 收集器
+* Parallel Scavenge 收集器是一款新生代收集器，基于标记-复制算法实现
+* Parallel Old 收集器是一款老年代收集器，基于标记-整理算法实现
+* 两者都支持多线程并行收集，需要「Stop The World」
+* 控制吞吐量为目标
 
-使用-XX:+UseSerialGC参数可以设置新生代使用这个串行回收器
-
-
-### 2、ParNew 垃圾回收器
-ParNew其实就是Serial的多线程版本，除了使用多线程之外，其余参数和Serial一模一样。俗称：并行垃圾回收器，采用复制算法进行垃圾回收
-
-特点
-ParNew默认开启的线程数与CPU数量相同，在CPU核数很多的机器上，可以通过参数-XX:ParallelGCThreads来设置线程数。
-
-**它是目前新生代首选的垃圾回收器，因为除了ParNew之外，它是唯一一个能与老年代CMS配合工作的。**
-
-它同样存在Stop The World问题
-
-使用-XX:+UseParNewGC参数可以设置新生代使用这个并行回收器
-
-### 3、Parallel Scavenge 回收器
-Parallel Scavenge使用复制算法回收垃圾，也是多线程的。
-
-**特点**
-就是非常关注系统的吞吐量，吞吐量=代码运行时间/(代码运行时间+垃圾收集时间)，系统吨吐量优先。
-
--XX:MaxGCPauseMillis：设置最大垃圾收集停顿时间，可用把虚拟机在GC停顿的时间控制在MaxGCPauseMillis范围内，如果希望减少GC停顿时间可以将MaxGCPauseMillis设置的很小，但是会导致GC频繁，从而增加了GC的总时间，降低了吞吐量。所以需要根据实际情况设置该值。
-
--Xx:GCTimeRatio：设置吞吐量大小，它是一个0到100之间的整数，默认情况下他的取值是99，那么系统将花费不超过1/(1+n)的时间用于垃圾回收，也就是1/(1+99)=1%的时间。
-
-另外还可以指定-XX:+UseAdaptiveSizePolicy打开自适应模式，在这种模式下，新生代的大小、eden、from/to的比例，以及晋升老年代的对象年龄参数会被自动调整，以达到在堆大小、吞吐量和停顿时间之间的平衡点。
+**特性**
+1. 可控制的吞吐量
+两个参数用于精确控制吞吐量，分别是
+  * 控制最大垃圾收集停顿时间 -XX：MaxGCPauseMillis ( >0 的毫秒数)
+  * 设置吞吐量大小的 -XX：GCTimeRatio（0-100 的整数）
+2. 自适应的调节策略
+-XX：+UseAdaptiveSizePolicy 当这个参数被激活之后，就不需要人工指定新生代的大小（-Xmn）、Eden 与 Survivor 区的比例（-XX：SurvivorRatio）、晋升老年代对象大小（-XX：PretenureSizeThreshold）等细节参数，
+虚拟机会根据当前系统的运行情况收集性能监控信息，动态调整这些参数以提供最合适的停顿时间或者最大的吞吐量。
 
 使用-XX:+UseParallelGC参数可以设置新生代使用这个并行回收器，即 Parallel Scavenge + Parallel Old。
 
-## 老年代垃圾回收器
-### 1、SerialOld 垃圾回收器
-SerialOld是Serial回收器的老年代回收器版本，它同样是一个单线程回收器。
-
-使用算法：标记 - 整理算法
-用途
-* 一个是在JDK1.5及之前的版本中与Parallel Scavenge收集器搭配使用，
-* 另一个就是作为CMS收集器的后备预案，如果CMS出现Concurrent Mode Failure，则SerialOld将作为后备收集器。
-
-### 2、ParallelOldGC 回收器
-Parallel Scavenge的老年代版本，多线程，**标记-整理算法**。
-老年代ParallelOldGC回收器也是一种多线程的回收器，和新生代的Parallel Scavenge回收器一样，也是一种关注吞吐量的回收器，他使用了**标记压缩**算法进行实现。
-
--XX:+UseParallelOldGc进行设置老年代使用该回收器
-
--XX:+ParallelGCThreads也可以设置垃圾收集时的线程数量。
-
-### 3、CMS 回收器
+### CMS 回收器
 CMS全称为:Concurrent Mark Sweep意为并发标记清除，他使用的是**标记清除法**。主要关注**系统停顿时间**。
 
-使用-XX:+UseConcMarkSweepGC进行设置老年代使用该回收器。
+* CMS（Concurrent Mark Sweep）是一个老年代收集器，基于标记-清除算法实现
+* 以最短回收停顿时间为目标
 
+使用-XX:+UseConcMarkSweepGC 进行设置老年代使用该回收器。
 使用-XX:ConcGCThreads设置并发线程数量。
 
-特点
+**实现步骤**
+1. 初始标记：标记一下 GC Roots 能直接关联到的对象，速度很快，需要「Stop The World」
+2. 并发标记：从 GC Roots 的直接关联对象开始遍历整个对象图，并发执行
+3. 重新标记：为了修正并发标记期间，因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，需要「Stop The World」
+4. 并发清除：清理删除掉标记阶段判断的已经死亡的对象，由于不需要移动存活对象，并发执行
+
+**缺点**
+* 并发阶段占用一部分线程，CMS 默认启动的回收线程数是（处理器核心数量 +3）/4
+* 并发标记和清理阶段，程序可能会有垃圾对象不断产生最终导致 Full GC
+* 为了支持并发标记和清理阶段程序运行，超过参数值 -XX：CMSInitiatingOccupancyFraction 后临时使用 Serial Old 收集器进行一次 Full GC
+* 基于标记-清除算法实现会有大量空间碎片产生，CMS 收集器不得不进行 Full GC 时开启内存碎片的合并整理过程，由于这个内存整理必须移动存活对象，因此无法并发执行。
+
+**应用场景**
+关注服务的响应速度，希望系统停顿时间尽可能短，以给用户带来良好的交互体验。
+
+**特性**
 CMS并不是独占的回收器，也就说CMS回收的过程中，应用程序仍然在不停的工作，又会有新的垃圾不断的产生，所以在使用CMS的过程中应该确保应用程序的内存足够可用。
 
 CMS不会等到应用程序饱和的时候才去回收垃圾，而是在某一阀值的时候开始回收，回收阀值可用指定的参数进行配置：-XX:CMSInitiatingoccupancyFraction来指定，默认为68，也就是说当老年代的空间使用率达到68%的时候，会执行CMS回收。
@@ -142,3 +94,19 @@ CMS不会等到应用程序饱和的时候才去回收垃圾，而是在某一�
 -XX:CMSFullGCsBeforeCompaction参数可以设置进行多少次CMS回收之后，对内存进行一次压缩。
 
 ### G1 回收器
+* G1 是一款主要面向服务端应用的垃圾收集器。
+* 从整体来看是基于「标记-整理」算法实现的收集器，但从局部（两个 Region 之间）上看又是基于「标记-复制」算法实现
+* G1 即是新生代又是老年代收集器”，无需组合其他收集器。
+
+> 每个 Region 的大小可以通过参数-XX：G1HeapRegionSize 设定，取值范围为 1MB～32MB，且应为 2 的 N 次幂。而对于那些超过了整个 Region 容量的超级大对象，将会被存放在 N 个连续的 Humongous Region 之中，G1 的大多数行为都把 Humongous Region 作为老年代的一部分来进行看待
+
+G1 收集器 Region 划分
+![image](https://user-images.githubusercontent.com/13992911/115261496-40278500-a166-11eb-8ba9-b46483fac50b.png)
+
+**特性**
+* Region 区域：把连续的 Java 堆划分为多个大小相等的独立 Region，每一个 Region 都可以根据需要，扮演新生代的 Eden 空间、Survivor 空间，或者老年代空间
+* Humongous 区域：专门用来存储大对象。只要大小超过了一个 Region 容量一半的对象即可判定为大对象。
+* 基于停顿时间模型：消耗在垃圾收集上的时间大概率不超过 N 毫秒的目标（使用参数-XX：MaxGCPauseMillis 指定，默认值是 200 毫秒）
+* Mixed GC 模式：可以面向堆内存任何部分来组成「回收集」进行回收，衡量标准不再是它属于哪个分代，而是哪块内存中存放的垃圾数量最多，回收收益最大
+* 无内存空间碎片：G1 算法实现意味着运作期间不会产生内存空间碎片
+
