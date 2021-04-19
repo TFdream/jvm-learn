@@ -13,6 +13,9 @@
 [minor GC和Full GC的区别是什么？触发条件分别是什么？](https://github.com/TFdream/jvm-learning/blob/main/content/ygc_full_GC.md)
 
 ## jdk各版本默认垃圾收集器
+jdk1.7 默认垃圾收集器Parallel Scavenge（新生代）+Parallel Old（老年代）
+
+
 JDK8默认使用的垃圾收集器可通过如下命令查看：
 ```
 RickydeMacBook-Pro:mall-admin-service apple$ java -XX:+PrintCommandLineFlags -version
