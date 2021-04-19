@@ -5,7 +5,7 @@
 需要注意的是，JVM GC只回收堆内存和方法区内的对象。而栈内存的数据，在超出作用域后会被JVM自动释放掉，所以其不在JVM GC的管理范围内。
 
 ## 垃圾回收器总览
-![image](https://user-images.githubusercontent.com/13992911/115179669-6ddce180-a106-11eb-9df9-4e932c371256.png)
+![image](https://user-images.githubusercontent.com/13992911/115264186-a8776600-a168-11eb-82b9-a02a6a342254.png)
 
 新生代可配置的回收器：Serial、ParNew、Parallel Scavenge
 
