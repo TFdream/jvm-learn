@@ -16,11 +16,12 @@ JDK8默认使用的垃圾收集器可通过如下命令查看：
 RickydeMacBook-Pro:mall-admin-service apple$ java -XX:+PrintCommandLineFlags -version
 ```
 结果如下：
-> RickydeMacBook-Pro:mall-admin-service apple$ java -XX:+PrintCommandLineFlags -version
+```
 -XX:InitialHeapSize=268435456 -XX:MaxHeapSize=4294967296 -XX:+PrintCommandLineFlags -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseParallelGC
 java version "1.8.0_171"
 Java(TM) SE Runtime Environment (build 1.8.0_171-b11)
 Java HotSpot(TM) 64-Bit Server VM (build 25.171-b11, mixed mode)
+```
 
 ```-XX:+UseParallelGC``` 即 Parallel Scavenge + Parallel Old。
 
