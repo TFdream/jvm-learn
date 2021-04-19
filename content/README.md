@@ -9,6 +9,8 @@
 
 新生代和老年代区域的回收器之间进行连线，说明他们之间可以搭配使用。
 
+## minor GC和Full GC的区别是什么？触发条件分别是什么？
+[minor GC和Full GC的区别是什么？触发条件分别是什么？](https://github.com/TFdream/jvm-learning/blob/main/content/ygc_full_GC.md)
 
 ## jdk各版本默认垃圾收集器
 JDK8默认使用的垃圾收集器可通过如下命令查看：
