@@ -21,8 +21,8 @@
 
 jdk1.7 默认垃圾收集器Parallel Scavenge（新生代）+Parallel Old（老年代），参考[知乎这篇文章](https://www.zhihu.com/question/56344485)，一楼有R大的回答:
 
-> R大的意思是，自JDK7u4开始的JDK7u系列与JDK8系列，如果指定了：-XX:+UseParallelGC，则会默认开启：```XX:+UseParallelOldGC```。
-
+> 这个问题的答案取决于JDK版本，在2012年默认值改变过一次。自JDK7u4开始的JDK7u系列与JDK8系列，如果指定了：-XX:+UseParallelGC，则会默认开启：```XX:+UseParallelOldGC```。
+> 在这个改变之前，即便选择了ParallelGC，默认情况下ParallelOldGC并不会随即开启，而是要自己通过 -XX:+UseParallelOldGC 去选定。
 
 JDK8默认使用的垃圾收集器可通过如下命令查看：
 ```
