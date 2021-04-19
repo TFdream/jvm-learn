@@ -96,7 +96,8 @@ SerialOld是Serial回收器的老年代回收器版本，它同样是一个单�
 * 另一个就是作为CMS收集器的后备预案，如果CMS出现Concurrent Mode Failure，则SerialOld将作为后备收集器。
 
 ### 2、ParallelOldGC 回收器
-老年代ParallelOldGC回收器也是一种多线程的回收器，和新生代的ParallelGC回收器一样，也是一种关注吞吐量的回收器，他使用了**标记压缩**算法进行实现。
+Parallel Scavenge的老年代版本，多线程，**标记-整理算法**。
+老年代ParallelOldGC回收器也是一种多线程的回收器，和新生代的Parallel Scavenge回收器一样，也是一种关注吞吐量的回收器，他使用了**标记压缩**算法进行实现。
 
 -XX:+UseParallelOldGc进行设置老年代使用该回收器
 
