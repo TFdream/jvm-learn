@@ -1,5 +1,31 @@
 # JVM垃圾回收
 
+## 垃圾回收器总览
+![image](https://user-images.githubusercontent.com/13992911/115195314-329bdc00-a121-11eb-87d6-a6c98712c0b1.png)
+
+新生代可配置的回收器：Serial、ParNew、Parallel Scavenge
+
+老年代配置的回收器：CMS、Serial Old、Parallel Old
+
+新生代和老年代区域的回收器之间进行连线，说明他们之间可以搭配使用。
+
+
+## jdk各版本默认垃圾收集器
+JDK8默认使用的垃圾收集器可通过如下命令查看：
+```
+RickydeMacBook-Pro:mall-admin-service apple$ java -XX:+PrintCommandLineFlags -version
+```
+结果如下：
+> RickydeMacBook-Pro:mall-admin-service apple$ java -XX:+PrintCommandLineFlags -version
+-XX:InitialHeapSize=268435456 -XX:MaxHeapSize=4294967296 -XX:+PrintCommandLineFlags -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseParallelGC
+java version "1.8.0_171"
+Java(TM) SE Runtime Environment (build 1.8.0_171-b11)
+Java HotSpot(TM) 64-Bit Server VM (build 25.171-b11, mixed mode)
+
+```-XX:+UseParallelGC``` 即 Parallel Scavenge + Parallel Old。
+
+在JDK 9中，G1被提议设置为默认垃圾收集器（JEP 248）。
+
 ## JVM常用基础参数
 * -Xms 初始大小内存，默认为物理内存的1/64 等价于-XX:InitialHeapSize
 * -Xmx 最大分配内存，默认为物理内存的1/4 等价于-XX:MaxHeapSize
@@ -9,11 +35,6 @@
 * -XX:SurvivorRatio 设置新生代中eden和S0/S1空间的比例 默认-XX:SurvivorRatio=8
 * -XX:NewRatio 配置年轻代与老年代在堆结构中的占比 默认-XX:NewRatio=2（即年轻代为老年代的1/2）
 * -XX:MaxTenuringThreshold 设置垃圾在年轻代的最大年龄，默认为15
-
-
-## jdk各版本默认垃圾收集器
-
-在JDK 9中，G1被提议设置为默认垃圾收集器（JEP 248）。
 
 
 ## G1算法
