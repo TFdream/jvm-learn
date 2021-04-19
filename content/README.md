@@ -40,5 +40,8 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.171-b11, mixed mode)
 | -XX:MaxTenuringThreshold | 设置垃圾在年轻代的最大年龄，默认为15 |
 | -XX:PrintGCDetails | 输出详细GC收集日志信息 | 
 
+## JVM高频面试题
+* [JVM高频面试题](https://github.com/TFdream/jvm-learning/blob/main/content/jvm_interview_question.md)
+
 ## G1算法
 [Java Hotspot G1 GC的一些关键技术](https://tech.meituan.com/2016/09/23/g1.html)
