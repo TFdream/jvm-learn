@@ -72,8 +72,8 @@ ParNew默认开启的线程数与CPU数量相同，在CPU核数很多的机器�
 
 使用-XX:+UseParNewGC参数可以设置新生代使用这个并行回收器
 
-### 3、ParallelGC 回收器
-ParallelGC使用复制算法回收垃圾，也是多线程的。
+### 3、Parallel Scavenge 回收器
+Parallel Scavenge使用复制算法回收垃圾，也是多线程的。
 
 **特点**
 就是非常关注系统的吞吐量，吞吐量=代码运行时间/(代码运行时间+垃圾收集时间)，系统吨吐量优先。
@@ -84,7 +84,7 @@ ParallelGC使用复制算法回收垃圾，也是多线程的。
 
 另外还可以指定-XX:+UseAdaptiveSizePolicy打开自适应模式，在这种模式下，新生代的大小、eden、from/to的比例，以及晋升老年代的对象年龄参数会被自动调整，以达到在堆大小、吞吐量和停顿时间之间的平衡点。
 
-使用-XX:+UseParallelGC参数可以设置新生代使用这个并行回收器
+使用-XX:+UseParallelGC参数可以设置新生代使用这个并行回收器，即 Parallel Scavenge + Parallel Old。
 
 ## 老年代垃圾回收器
 ### 1、SerialOld 垃圾回收器
