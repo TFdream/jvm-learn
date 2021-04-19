@@ -31,6 +31,21 @@ S1满了之后在GC，存活下来的再次移动到S0区，S1区空闲，这样
 
 新生代和老年代区域的回收器之间进行连线，说明他们之间可以搭配使用。
 
+## JDK8默认使用的垃圾收集器
+今天面试问道JDK8默认使用的垃圾收集器是什么，然后回来第一时间CMD命令查看了一下：
+```
+RickydeMacBook-Pro:mall-admin-service apple$ java -XX:+PrintCommandLineFlags -version
+-XX:InitialHeapSize=268435456 -XX:MaxHeapSize=4294967296 -XX:+PrintCommandLineFlags -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseParallelGC
+java version "1.8.0_171"
+Java(TM) SE Runtime Environment (build 1.8.0_171-b11)
+Java HotSpot(TM) 64-Bit Server VM (build 25.171-b11, mixed mode)
+
+```
+UseParallelGC 即 Parallel Scavenge + Parallel Old，再查看详细信息：
+```
+> java -XX:+PrintGCDetails -version
+```
+
 ## 新生代垃圾回收器
 ### 1、Serial 垃圾回收器
 Serial收集器是最基本的、发展历史最悠久的收集器。俗称为：串行回收器，采用复制算法进行垃圾回收
