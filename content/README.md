@@ -25,19 +25,7 @@ jdk1.7 默认垃圾收集器Parallel Scavenge（新生代）+Parallel Old（老�
 > 在这个改变之前，即便选择了ParallelGC，默认情况下ParallelOldGC并不会随即开启，而是要自己通过 -XX:+UseParallelOldGC 去选定。
 
 ### JDK 8
-JDK8默认使用的垃圾收集器可通过如下命令查看：
-```
-RickydeMacBook-Pro:mall-admin-service apple$ java -XX:+PrintCommandLineFlags -version
-```
-结果如下：
-```
--XX:InitialHeapSize=268435456 -XX:MaxHeapSize=4294967296 -XX:+PrintCommandLineFlags -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseParallelGC
-java version "1.8.0_171"
-Java(TM) SE Runtime Environment (build 1.8.0_171-b11)
-Java HotSpot(TM) 64-Bit Server VM (build 25.171-b11, mixed mode)
-```
-
-```-XX:+UseParallelGC``` 即 Parallel Scavenge + Parallel Old。
+JDK8默认使用 ParallelGC 垃圾收集器，即 Parallel Scavenge + Parallel Old 组合。
 
 ### JDK 9
 从JDK 9开始G1替代并行垃圾回收器成为JVM中默认的垃圾回收器（具体可见[JEP提案248](https://openjdk.java.net/jeps/248)），并且官方将CMS标记为丢弃（具体可见[JEP提案291](https://openjdk.java.net/jeps/291)）。G1能够脱颖而出，成为最大的赢家，其最主要的原因就是在过去几年间，众多使用者使用G1之后发现G1的性能表现的非常优秀。
