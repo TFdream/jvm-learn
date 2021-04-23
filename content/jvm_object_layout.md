@@ -173,6 +173,6 @@ Space losses: 1 bytes internal + 0 bytes external = 1 bytes total
 
 可以看到jol工具，能够显示出对象头的大小，以及每个实例字段的偏移，进而计算对象占用的内存大小。
 
-jol工具还提供了一个命令行工具``jol-cli```，包含了main方法能够直接在命令行运行，查看类的布局信息。
+jol工具还提供了一个命令行工具```jol-cli```，包含了main方法能够直接在命令行运行，查看类的布局信息。
 
 
