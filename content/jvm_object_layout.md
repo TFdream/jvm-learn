@@ -39,7 +39,25 @@ Java对象的内存布局：对象头（Header）、实例数据（Instance Data
 * 通过Unsafe的objectFieldOffset方法可以间接推断出对象大小；
 * [openjdk jol](http://openjdk.java.net/projects/code-tools/jol/)提供了 ClassLayout能够输出输出对象占用大小信息；
 
-### 通过Instrumentation
+## 示例
+假设对象 ObjectA 如下：
+```
+
+    private static class ObjectA {
+        String str;   // 4
+        int i1;       // 4
+        byte b1;      // 1
+        byte b2;      // 1
+        int i2;       // 4
+        ObjectB obj;  //4
+        byte b3;      // 1
+    }
+
+    private static class ObjectB {
+    }
+```
+
+### 1、通过Instrumentation
 这种方法得到的是Shallow Size，即遇到引用时，只计算引用的长度，不计算所引用的对象的实际大小。如果要计算所引用对象的实际大小，必须通过递归的方式去计算。
 ```
 import java.lang.instrument.Instrumentation;
@@ -55,7 +73,7 @@ public class ObjectShallowSize {
     }
  }
 ```
-### 通过Unsafe
+### 2、通过Unsafe
 
 ```
 import sun.misc.Unsafe;
@@ -110,5 +128,51 @@ HotSpot创建的对象的字段会先按照给定顺序排列，默认的顺序�
 > Size(ObjectA) = 32
 
 与上面计算结果一致。
-### openjdk jol
+### 3、jol
+首先，添加jol依赖：
+```
+<dependency>
+    <groupId>org.openjdk.jol</groupId>
+    <artifactId>jol-core</artifactId>
+    <version>0.15</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+接下来就使用 ClassLayout的 parseClass或者 parseInstance来查看内存布局了，如下：
+```
+
+    public static void main(String[] args) {
+        ObjectA objectA = new ObjectA();
+
+        //System.out.println(ClassLayout.parseClass(ObjectA.class).toPrintable());
+        //System.out.println("==========");
+        
+        System.out.println(ClassLayout.parseInstance(objectA).toPrintable());
+    }
+```
+
+运行这段代码，可以看到jol输出如下信息：
+```
+com.renzhenmall.oms.ObjectSize$ObjectA object internals:
+OFF  SZ                                     TYPE DESCRIPTION               VALUE
+  0   8                                          (object header: mark)     0x0000000000000001 (non-biasable; age: 0)
+  8   4                                          (object header: class)    0xf800c144
+ 12   4                                      int ObjectA.i1                0
+ 16   4                                      int ObjectA.i2                0
+ 20   1                                     byte ObjectA.b1                0
+ 21   1                                     byte ObjectA.b2                0
+ 22   1                                     byte ObjectA.b3                0
+ 23   1                                          (alignment/padding gap)   
+ 24   4                         java.lang.String ObjectA.str               null
+ 28   4   com.renzhenmall.oms.ObjectSize.ObjectB ObjectA.obj               null
+Instance size: 32 bytes
+Space losses: 1 bytes internal + 0 bytes external = 1 bytes total
+
+```
+
+可以看到jol工具，能够显示出对象头的大小，以及每个实例字段的偏移，进而计算对象占用的内存大小。
+
+jol工具还提供了一个命令行工具``jol-cli```，包含了main方法能够直接在命令行运行，查看类的布局信息。
+
 
