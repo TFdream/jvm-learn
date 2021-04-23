@@ -35,8 +35,8 @@ Java对象的内存布局：对象头（Header）、实例数据（Instance Data
 5.64位JVM上，数组对象的对象头占用24个字节，启用压缩之后占用16个字节。之所以比普通对象占用内存多是因为需要额外的空间存储数组的长度。
 
 笔者了解到的有3种方式：
-* 通过Instrumentation来获取；
-* 通过Unsafe的使用，后面我会专门开一个专题来详细讲述，这里暂时让我们来见识下Unsafe的神奇之处。
+* 通过Instrumentation的getObjectSize方法来获取；
+* 通过Unsafe的objectFieldOffset方法可以间接推断出对象大小；
 * [openjdk jol](http://openjdk.java.net/projects/code-tools/jol/)提供了 ClassLayout能够输出输出对象占用大小信息；
 
 ### 通过Instrumentation
@@ -85,6 +85,30 @@ public class ObjectSize {
     }
 }
 ```
+输出结果如下：
+```
+str---offSet:24
+i1---offSet:12
+b1---offSet:20
+b2---offSet:21
+i2---offSet:16
+obj---offSet:28
+b3---offSet:22
+```
 
+我们同样可以算得对象实际占用的内存大小：
+> Size(ObjectA) = Size(对象头(_mark)) + size(oop指针) + size(排序后数据区)  =  8 + 4 + (28+4-12)  =  32.
+
+我们再回过头来，看我们在通过代码获取对象所占内存大小之前的预估值40。比我们实际算出来的值多了8个字节。通过Unsafe打印的详细信息，我们不难想到这其实是由hotspot创建对象时的排序决定的：
+
+HotSpot创建的对象的字段会先按照给定顺序排列，默认的顺序为：从长到短排列，引用排最后: long/double –> int/float –> short/char –> byte/boolean –> Reference。
+
+所以我们重新计算对象所占内存大小得：
+
+> Size(ObjectA) = Size(对象头(_mark)) + size(oop指针) + size(排序后数据区)
+> Size(ObjectA) = 8 + 4 + 4(int) + 4(int) + byte(1) + byte(1) + 2(padding) + 4(String) + 4(ObjectB指针)
+> Size(ObjectA) = 32
+
+与上面计算结果一致。
 ### openjdk jol
 
