@@ -34,7 +34,57 @@ Java对象的内存布局：对象头（Header）、实例数据（Instance Data
 4. 开启(-XX:+UseCompressedOops)指针压缩，对象头占12字节; 关闭(-XX:-UseCompressedOops)指针压缩,对象头占16字节。
 5.64位JVM上，数组对象的对象头占用24个字节，启用压缩之后占用16个字节。之所以比普通对象占用内存多是因为需要额外的空间存储数组的长度。
 
-笔者了解到的有2种方式：
-* 通过Instrumentation来获取
-  这种方法得到的是Shallow Size，即遇到引用时，只计算引用的长度，不计算所引用的对象的实际大小。如果要计算所引用对象的实际大小，必须通过递归的方式去计算。
+笔者了解到的有3种方式：
+* 通过Instrumentation来获取；
+* 通过Unsafe的使用，后面我会专门开一个专题来详细讲述，这里暂时让我们来见识下Unsafe的神奇之处。
 * [openjdk jol](http://openjdk.java.net/projects/code-tools/jol/)提供了 ClassLayout能够输出输出对象占用大小信息；
+
+### 通过Instrumentation
+这种方法得到的是Shallow Size，即遇到引用时，只计算引用的长度，不计算所引用的对象的实际大小。如果要计算所引用对象的实际大小，必须通过递归的方式去计算。
+```
+import java.lang.instrument.Instrumentation;
+
+public class ObjectShallowSize {
+    private static Instrumentation inst;  
+    public static void premain(String agentArgs, Instrumentation instP){
+        inst = instP; 
+    }
+        
+    public static long sizeOf(Object obj){
+        return inst.getObjectSize(obj);
+    }
+ }
+```
+### 通过Unsafe
+
+```
+import sun.misc.Unsafe;
+import java.lang.reflect.Field;
+
+/**
+ * @author Ricky Fung
+ */
+public class ObjectSize {
+
+    private final static Unsafe UNSAFE;
+
+    // 只能通过反射获取Unsafe对象的实例
+    static {
+        try {
+            UNSAFE = (Unsafe) Unsafe.class.getDeclaredField("theUnsafe").get(null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void sizeOf(Object obj) {
+        Field[] fields = obj.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            System.out.println(field.getName() + "---offSet:" + UNSAFE.objectFieldOffset(field));
+        }
+    }
+}
+```
+
+### openjdk jol
+
