@@ -46,3 +46,6 @@ TLAB占用的是eden区的空间。
 （仅适用于 DefNew / ParNew新生代垃圾回收器 ） bugs.openjdk.java.net/browse/JDK-…
 G1回收器的大对象判断，则依据Region的大小（```-XX:G1HeapRegionSize```）来判断，如果对象大于Region 50%以上，就判断为大对象Humongous Object。
 
+## 相关资料
+* [JVM 对象分配过程](https://juejin.cn/post/6844904146898780173)
+* 
