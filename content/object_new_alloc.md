@@ -47,4 +47,4 @@ TLAB占用的是eden区的空间。
 
 ## 相关资料
 * [JVM 对象分配过程](https://juejin.cn/post/6844904146898780173)
-* 
+* [JVM 关于对象分配在堆、栈、TLAB的理解](https://www.cnblogs.com/myseries/p/12884249.html)
